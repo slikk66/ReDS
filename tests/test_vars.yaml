@@ -8,19 +8,16 @@ instance_sizes:
   - db.m4.xlarge
 scale_down:
   cron: 0 5 * * 2-6
-  period: 60
-  evaluations: 5
+  alarm_duration: 5
   threshold: 10
   cooldown: 60
 scale_up:
   cron: 0 15 * * 1-5
-  period: 60
-  evaluations: 10
+  alarm_duration: 10
   threshold: 80
   cooldown: 10
 credits:
-  period: 60
-  evaluations: 10
+  alarm_duration: 10
   threshold: 2
   cooldown: 10
 enabled: True
