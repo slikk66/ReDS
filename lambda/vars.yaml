@@ -4,6 +4,8 @@ instance_sizes:
   - db.t2.micro
   - db.t2.small
   - db.m3.medium
+  - db.m4.large
+  - db.m4.xlarge
 scale_down:
   cron: 0 5 * * 2-6
   alarm_duration: 5
@@ -21,5 +23,5 @@ credits:
 enabled: True
 scheduled_index: 2
 schedule_enabled: False
-rds_identifier: mixhop-rds-master
+rds_identifier: your-db-identifier
 ...
