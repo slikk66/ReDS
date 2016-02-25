@@ -210,8 +210,8 @@ class reds:
             self.info("AMZ response {}".format(amz_res))
 
     def print_logs(self):
-        for x in self.result['Logs']:
-            print x
+        for log in self.result['Logs']:
+            print log
 
 def lambda_handler(context, event):
     a = reds()
