@@ -4,6 +4,8 @@ instance_sizes:
   - db.t2.micro
   - db.t2.small
   - db.m3.medium
+  - db.m4.large
+  - db.m4.xlarge
 scale_down:
   cron: 0 5 * * 2-6
   alarm_duration: 5
@@ -19,7 +21,7 @@ credits:
   threshold: 2
   cooldown: 10
 enabled: True
-scheduled_index: 2
-schedule_enabled: False
-rds_identifier: mixhop-rds-master
+scheduled_index: 6
+schedule_enabled: True
+rds_identifier: test-db-identifier
 ...

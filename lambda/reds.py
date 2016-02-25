@@ -120,8 +120,11 @@ class reds:
                         self.now,
                         next_down_exec
                     ))
-                self.info("Min allowed instance size is: {}".format(
-                    self.vars['instance_sizes'][self.vars['scheduled_index']]))
+                try:
+                    up_db = self.vars['instance_sizes'][self.vars['scheduled_index']]
+                except IndexError:
+                    return self.abort("invalid scheduled_index")
+                self.info("Min allowed instance size is: {}".format(up_db))
                 if self.on_index < self.vars['scheduled_index']:
                     self.info("Running scheduled scale up to {}".format(
                         self.vars['instance_sizes'][self.vars['scheduled_index']]))

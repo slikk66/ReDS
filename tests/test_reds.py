@@ -131,11 +131,9 @@ no_update = {
     "Events": []
 }
 
-def get_vars():
-    return [yaml.load(file('./tests/test_vars.yaml')),yaml.load(file('./tests/test_alarms.yaml'))]
-
-def get_vars_disabled():
-    return [yaml.load(file('./tests/test_vars_disabled.yaml')),yaml.load(file('./tests/test_alarms.yaml'))]
+def get_vars(extra=None):
+    suffix = extra if extra else ""
+    return [yaml.load(file("./tests/test_vars{}.yaml".format(suffix))),yaml.load(file('./tests/test_alarms.yaml'))]
 
 @freeze_time("2016-01-01 19:30:00", tz_offset=0)
 def test_noop_on_single_az():
@@ -235,7 +233,7 @@ def test_nothing_to_do():
 
 @freeze_time("2016-01-02 18:45:00", tz_offset=0)
 def test_scaling_disabled_scale_up():
-    test_yaml = get_vars_disabled()
+    test_yaml = get_vars('_disabled')
     a.testing_startup(test_yaml[0], test_yaml[1],
         micro_multi_az_available, high_cpu, no_update)
     assert(a.result['Action']   ==  'NO_ACTION')
@@ -243,7 +241,7 @@ def test_scaling_disabled_scale_up():
 
 @freeze_time("2016-01-02 18:45:00", tz_offset=0)
 def test_scaling_disabled_scale_down():
-    test_yaml = get_vars_disabled()
+    test_yaml = get_vars('_disabled')
     a.testing_startup(test_yaml[0], test_yaml[1],
         medium_multi_az_available, low_cpu, no_update)
     assert(a.result['Action']   ==  'NO_ACTION')
@@ -256,3 +254,11 @@ def test_prevent_scale_down_during_scheduled():
         medium_multi_az_available, low_cpu, no_update)
     assert(a.result['Action']   ==  'NO_ACTION')
     assert(a.result['Message']  ==  'Already at bottom for size during scheduled scale up')
+
+@freeze_time("2016-01-01 19:30:00", tz_offset=0)
+def test_invalid_index():
+    test_yaml = get_vars('_invalid_index')
+    a.testing_startup(test_yaml[0], test_yaml[1],
+        medium_multi_az_available, high_cpu, no_update)
+    assert(a.result['Action']   ==  'NO_ACTION')
+    assert(a.result['Message']  ==  'invalid scheduled_index')
