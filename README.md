@@ -1,4 +1,4 @@
-# ReDS
+# ReDS - ReActive Database System
 RDS automatic resizing and scheduled scale up/down
 
 Creates multiple CloudFormation stacks to monitor your RDS instance and scale accordingly.
