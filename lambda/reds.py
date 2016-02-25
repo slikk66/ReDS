@@ -4,6 +4,7 @@ import datetime
 import croniter
 import pytz
 
+
 class reds:
 
     def __init__(self):
@@ -26,12 +27,13 @@ class reds:
 
         self.now = datetime.datetime.utcnow()
 
-        self.set_vars(yaml.load(file('vars.yaml')), yaml.load(file('alarms.yaml')))
+        self.set_vars(
+            yaml.load(file('vars.yaml')), yaml.load(file('alarms.yaml')))
 
         self.process(
             self.rds_client.describe_db_instances(
                 DBInstanceIdentifier=self.vars['rds_identifier']
-                )['DBInstances'][0],
+            )['DBInstances'][0],
             self.cloudwatch_client.describe_alarms(
                 AlarmNames=[
                     self.alarms['alarm_high'],
@@ -44,7 +46,7 @@ class reds:
                 EventCategories=[
                     "configuration change"
                 ])
-            )
+        )
 
     def testing_startup(self, _vars, _alarms, _details, _alarm_status, _events):
         self.now = datetime.datetime.utcnow()
@@ -59,7 +61,8 @@ class reds:
     def abort(self, msg):
         self.result['Action'] = 'NO_ACTION'
         self.result['Message'] = msg
-        self.result['Logs'].append("{}: {}".format(self.result['Action'], self.result['Message']))
+        self.result['Logs'].append(
+            "{}: {}".format(self.result['Action'], self.result['Message']))
         return self.result
 
     def info(self, msg):
@@ -68,7 +71,8 @@ class reds:
     def success(self, msg):
         self.result['Action'] = 'RESIZE'
         self.result['Message'] = msg
-        self.result['Logs'].append("{}: {}".format(self.result['Action'], self.result['Message']))
+        self.result['Logs'].append(
+            "{}: {}".format(self.result['Action'], self.result['Message']))
         return self.result
 
     def process(self, _details, _alarm_status, _events, _execute=True):
@@ -78,7 +82,7 @@ class reds:
             "Action": None,
             "Message": None,
             "Logs": []
-            }
+        }
 
         self.details = _details
         self.alarm_status = _alarm_status
@@ -110,11 +114,13 @@ class reds:
         if self.vars['schedule_enabled']:
             self.info("Checking to see if we are in a scheduled uptime")
 
-            cron_up = croniter.croniter(self.vars['scale_up']['cron'], self.now)
+            cron_up = croniter.croniter(
+                self.vars['scale_up']['cron'], self.now)
             prev_up_exec = cron_up.get_prev(datetime.datetime)
             next_up_exec = cron_up.get_next(datetime.datetime)
 
-            cron_down = croniter.croniter(self.vars['scale_down']['cron'], self.now)
+            cron_down = croniter.croniter(
+                self.vars['scale_down']['cron'], self.now)
             prev_down_exec = cron_down.get_prev(datetime.datetime)
             next_down_exec = cron_down.get_next(datetime.datetime)
 
@@ -126,16 +132,17 @@ class reds:
             self.info("Current Time {}".format(self.now))
 
             if prev_down_exec < prev_up_exec < next_down_exec < next_up_exec \
-                and prev_up_exec < self.now < next_down_exec:
+                    and prev_up_exec < self.now < next_down_exec:
                 self.in_scheduled_up = True
-                self.info("In middle of a scheduled uptime! " + \
-                    "PrevUp/Current/NextDown {}/{}/{}".format(
-                        prev_up_exec,
-                        self.now,
-                        next_down_exec
-                    ))
+                self.info("In middle of a scheduled uptime! " +
+                          "PrevUp/Current/NextDown {}/{}/{}".format(
+                              prev_up_exec,
+                              self.now,
+                              next_down_exec
+                          ))
                 try:
-                    up_db = self.vars['instance_sizes'][self.vars['scheduled_index']]
+                    up_db = self.vars['instance_sizes'][
+                        self.vars['scheduled_index']]
                 except IndexError:
                     return self.abort("invalid scheduled_index")
                 self.info("Min allowed instance size is: {}".format(up_db))
@@ -170,7 +177,8 @@ class reds:
 
     def assert_cooldown_expired(self, reason):
         cooldown = self.vars[reason]['cooldown']
-        self.info("cooldown period (minutes) for {} is {}".format(reason, cooldown))
+        self.info(
+            "cooldown period (minutes) for {} is {}".format(reason, cooldown))
         for mod in self.events['Events'][::-1]:
             if mod['Message'].startswith("Finished applying modification to DB instance class"):
                 delta_time = self.now.replace(tzinfo=pytz.utc) - mod['Date']
@@ -190,7 +198,8 @@ class reds:
         if to_index and 0 <= to_index < len(self.vars['instance_sizes']):
             if self.in_scheduled_up and to_index < self.vars['scheduled_index']:
                 return self.abort("Already at bottom for size during scheduled scale up")
-            self.info("Scaling to {}".format(self.vars['instance_sizes'][to_index]))
+            self.info(
+                "Scaling to {}".format(self.vars['instance_sizes'][to_index]))
             if not self.assert_cooldown_expired(reason):
                 return self.abort("{} Cooldown threshold not reached".format(reason))
             if self.execute:
@@ -211,10 +220,11 @@ class reds:
 
     def print_logs(self):
         for log in self.result['Logs']:
-            print log
+            print(log)
+
 
 def lambda_handler(context, event):
-    a = reds()
-    a.lambda_startup()
-    a.lambda_apply_action()
-    a.print_logs()
+    red = reds()
+    red.lambda_startup()
+    red.lambda_apply_action()
+    red.print_logs()
