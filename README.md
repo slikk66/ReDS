@@ -2,6 +2,8 @@
 # ReDS - ReActive Database System
 RDS automatic resizing and scheduled scale up/down
 
+##Save up to 50% on RDS costs and save yourself headache during traffic spikes
+
 Creates multiple CloudFormation stacks to monitor your RDS instance and scale accordingly.
 
 Requirements:
