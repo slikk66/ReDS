@@ -7,5 +7,4 @@ pytest
 boto3
 pytz
 croniter
-pytest
 pytest-cov
