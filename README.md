@@ -1,3 +1,4 @@
+![GitHub Logo](http://i.imgur.com/IAMScGQ.png)
 # ReDS - ReActive Database System
 RDS automatic resizing and scheduled scale up/down
 
