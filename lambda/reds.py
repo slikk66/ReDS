@@ -6,13 +6,27 @@ import pytz
 
 class reds:
 
+    def __init__(self):
+        self.rds_client = None
+        self.cloudwatch_client = None
+        self.now = None
+        self.vars = None
+        self.alarms = None
+        self.in_scheduled_up = None
+        self.details = None
+        self.alarm_status = None
+        self.execute = None
+        self.events = None
+        self.result = None
+        self.on_index = None
+
     def lambda_startup(self):
         self.rds_client = boto3.client('rds')
         self.cloudwatch_client = boto3.client('cloudwatch')
 
         self.now = datetime.datetime.utcnow()
 
-        self.set_vars(yaml.load(file('vars.yaml')),yaml.load(file('alarms.yaml')))
+        self.set_vars(yaml.load(file('vars.yaml')), yaml.load(file('alarms.yaml')))
 
         self.process(
             self.rds_client.describe_db_instances(
@@ -66,10 +80,10 @@ class reds:
             "Logs": []
             }
 
-        self.details        = _details
-        self.alarm_status   = _alarm_status
-        self.events         = _events
-        self.execute        = _execute
+        self.details = _details
+        self.alarm_status = _alarm_status
+        self.events = _events
+        self.execute = _execute
 
         self.info("Startup Time: {}".format(self.now.utcnow()))
         self.info("Configured instance sizes: {}".format(
@@ -128,7 +142,7 @@ class reds:
                 if self.on_index < self.vars['scheduled_index']:
                     self.info("Running scheduled scale up to {}".format(
                         self.vars['instance_sizes'][self.vars['scheduled_index']]))
-                    return self.scale('scale_up',self.vars['scheduled_index'])
+                    return self.scale('scale_up', self.vars['scheduled_index'])
             else:
                 self.info("Not in middle of a scheduled uptime")
         else:
@@ -139,22 +153,22 @@ class reds:
         if self.alarm_status['MetricAlarms'][0]['StateValue'] == 'ALARM':
             self.info("High-CPU Alarm status is: ALARM")
             self.info("Attempting scale up one size!")
-            return self.scale('scale_up',int(self.on_index+1))
+            return self.scale('scale_up', int(self.on_index+1))
         elif self.alarm_status['MetricAlarms'][1]['StateValue'] == 'ALARM':
             self.info("Low-CPU Alarm status is: ALARM")
             self.info("Attempting scale down one size!")
-            return self.scale('scale_down',int(self.on_index-1))
+            return self.scale('scale_down', int(self.on_index-1))
         elif self.details['DBInstanceClass'].startswith('db') and \
                 self.alarm_status['MetricAlarms'][2]['StateValue'] == 'ALARM':
             self.info("CPU-Credit-Low Alarm status is: ALARM")
             self.info("Attempting scale up to next non (T) instance")
             for dbtype in self.vars['instance_sizes'][int(self.on_index+1):]:
                 if not dbtype.startswith('db.t'):
-                    return self.scale('credits',self.vars['instance_sizes'].index(dbtype))
+                    return self.scale('credits', self.vars['instance_sizes'].index(dbtype))
 
         return self.abort("Nothing to do")
 
-    def assert_cooldown_expired(self,reason):
+    def assert_cooldown_expired(self, reason):
         cooldown = self.vars[reason]['cooldown']
         self.info("cooldown period (minutes) for {} is {}".format(reason, cooldown))
         for mod in self.events['Events'][::-1]:
@@ -163,7 +177,7 @@ class reds:
                 delta_time_calculated = divmod(
                     delta_time.days * 86400 + delta_time.seconds, 60)
                 self.info("Last finished modification {} Diff: (Min, Sec): {}".format(
-                  mod['Date'],delta_time_calculated))
+                    mod['Date'], delta_time_calculated))
                 if delta_time_calculated[0] < cooldown:
                     self.info("Not enough time has passed since last modification ({})".format(
                         cooldown))
