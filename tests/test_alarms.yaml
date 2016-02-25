@@ -1,0 +1,5 @@
+---
+alarm_high: reds-alarms-ReDSAlarmHigh
+alarm_low: reds-alarms-ReDSAlarmLow
+alarm_credits: reds-alarms-ReDSNoCredits
+...

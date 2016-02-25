@@ -1,0 +1,11 @@
+ansible
+awscli
+freezegun
+datetime
+pyyaml
+pytest
+boto3
+pytz
+croniter
+pytest
+pytest-cov

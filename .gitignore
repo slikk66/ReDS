@@ -1,0 +1,8 @@
+.coverage
+htmlcov
+.cache
+._*
+.DS*
+json/
+zip/
+*.pyc

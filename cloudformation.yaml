@@ -1,0 +1,91 @@
+---
+- name: provision stack
+  hosts: localhost
+  connection: local
+  tasks:
+
+  - name: include vars
+    include_vars: vars.yaml
+
+  - name: Create the temporary json output directory
+    file: dest=json state=directory
+
+  - name: Generate CloudFormation templates from troposphere
+    local_action: >
+      shell python {{ item }} > ./json/{{ item | basename | replace('.py', '.json') }}
+    with_fileglob:
+      - ./templates/*.py
+
+  - name: Validate the cloudformation descriptions
+    local_action: >
+        shell aws cloudformation validate-template --template-body file://{{ item }} --output text
+    with_fileglob:
+      - ./json/*.json
+
+  - name: set fact for time_token
+    set_fact: time_token={{ hostvars[inventory_hostname]['ansible_date_time']['iso8601'] }}
+
+  - name: Create Lambda Role
+    cloudformation: >
+        stack_name="reds-role"
+        state=present
+        region="{{region}}"
+        template=./json/iam-assets.json
+    args:
+        template_parameters:
+            RdsInstance: "{{ rds_identifier }}"
+    register: iam
+
+  - name: Create Lambda Bucket
+    cloudformation: >
+        stack_name="reds-bucket"
+        state=present
+        region="{{region}}"
+        template=./json/s3.json
+    register: s3
+
+  - name: Create Alarms
+    cloudformation: >
+        stack_name="reds-alarms"
+        state=present
+        region="{{region}}"
+        template=./json/alarms.json
+    args:
+        template_parameters:
+            RdsInstance: "{{ rds_identifier }}"
+            UpThreshold: "{{ scale_up['threshold'] }}"
+            UpEvaluations: "{{ scale_up['alarm_duration'] }}"
+            DownThreshold: "{{ scale_down['threshold'] }}"
+            DownEvaluations: "{{ scale_down['alarm_duration'] }}"
+            CreditThreshold: "{{ credits['threshold'] }}"
+            CreditEvaluations: "{{ credits['alarm_duration'] }}"
+    register: alarms
+
+  - name: Write output of the alarm names to vars
+    copy: content="---\nalarm_high{{ ':' }} {{ alarms['stack_outputs']['UpAlarm'] }}\nalarm_low{{ ':' }} {{ alarms['stack_outputs']['DownAlarm'] }}\nalarm_credits{{ ':' }} {{ alarms['stack_outputs']['CreditLowAlarm'] }}\n..." dest="./lambda/alarms.yaml"
+
+  - name: Create local zip
+    local_action: >
+      shell cd ./lambda && zip -r ../zip/reds-{{ time_token }}.zip ./*
+
+  - name: Upload python files to S3 bucket
+    local_action: >
+      shell aws s3 cp ./zip/reds-{{ time_token }}.zip s3://{{ s3['stack_outputs']['BucketName'] }}
+
+  - name: Clean up after ourselves
+    file: path="./zip/reds-{{ time_token }}.zip" state=absent
+
+  - name: Create Lambda Function
+    cloudformation: >
+        stack_name="reds-lambda"
+        state=present
+        region="{{region}}"
+        template=./json/lambda-function.json
+    args:
+        template_parameters:
+            TimeToken: "{{ time_token }}"
+            BucketName: "{{ s3['stack_outputs']['BucketName'] }}"
+            RdsInstance: "{{ rds_identifier }}"
+            LambdaRole: "{{ iam['stack_outputs']['LambdaRole'] }}"
+    register: lambda
+...
