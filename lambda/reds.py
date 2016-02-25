@@ -34,8 +34,8 @@ class reds:
 
     def testing_startup(self, _vars, _alarms, _details, _alarm_status, _events):
         self.now = datetime.datetime.utcnow()
-        self.set_vars(_vars,_alarms)
-        self.process(_details,_alarm_status,_events,False)
+        self.set_vars(_vars, _alarms)
+        self.process(_details, _alarm_status, _events, False)
         self.print_logs()
 
     def set_vars(self, _vars, _alarms):
@@ -45,16 +45,16 @@ class reds:
     def abort(self, msg):
         self.result['Action'] = 'NO_ACTION'
         self.result['Message'] = msg
-        self.result['Logs'].append("{}: {}".format(self.result['Action'],self.result['Message']))
+        self.result['Logs'].append("{}: {}".format(self.result['Action'], self.result['Message']))
         return self.result
 
     def info(self, msg):
-        self.result['Logs'].append("{}: {}".format("INFO",msg))
+        self.result['Logs'].append("{}: {}".format("INFO", msg))
 
     def success(self, msg):
         self.result['Action'] = 'RESIZE'
         self.result['Message'] = msg
-        self.result['Logs'].append("{}: {}".format(self.result['Action'],self.result['Message']))
+        self.result['Logs'].append("{}: {}".format(self.result['Action'], self.result['Message']))
         return self.result
 
     def process(self, _details, _alarm_status, _events, _execute=True):
@@ -89,7 +89,7 @@ class reds:
             self.on_index = self.vars['instance_sizes'].index(
                 self.details['DBInstanceClass'])
             self.info("DB pointer (0-{}) is currently on {}".format(
-                len(self.vars['instance_sizes'])-1,self.on_index))
+                len(self.vars['instance_sizes'])-1, self.on_index))
         except ValueError:
             return self.abort("Instance size not in list!")
 
@@ -156,7 +156,7 @@ class reds:
 
     def assert_cooldown_expired(self,reason):
         cooldown = self.vars[reason]['cooldown']
-        self.info("cooldown period (minutes) for {} is {}".format(reason,cooldown))
+        self.info("cooldown period (minutes) for {} is {}".format(reason, cooldown))
         for mod in self.events['Events'][::-1]:
             if mod['Message'].startswith("Finished applying modification to DB instance class"):
                 delta_time = self.now.replace(tzinfo=pytz.utc) - mod['Date']
