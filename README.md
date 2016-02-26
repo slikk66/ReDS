@@ -8,6 +8,7 @@ Features:
 - Can be dropped into any project
 - Handles low credit balance on T2 instances to upgrade to M/R instances automatically if they run out of credits
 - Allows schedules to go up to bigger DB during weekdays and back down at nights and weekends (if enabled)
+- Outputs logs to CloudWatch logs for review
 - Automatically increases/decreases capacity if CPU is too high/low
 - Creates multiple CloudFormation stacks to encapsulate the pieces
 - Built to AWS best practices in terms of security and IAM roles etc.
