@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from troposphere import GetAtt, Output, Template, Parameter, Ref
+from troposphere import Output, Template, Ref
 from troposphere.s3 import Bucket, Private
 
 t = Template()

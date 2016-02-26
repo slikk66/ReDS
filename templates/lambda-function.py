@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from troposphere import Template, Parameter, awslambda, Join, Ref, Output, GetAtt
+from troposphere import Template, Parameter, awslambda, Join, Ref, Output
 t = Template()
 
 rds_instance = t.add_parameter(Parameter(

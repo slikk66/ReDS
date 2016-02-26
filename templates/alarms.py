@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from troposphere import Template, Parameter, Ref, Join, Output
+from troposphere import Template, Parameter, Ref, Output
 from troposphere.cloudwatch import Alarm, MetricDimension
 
 t = Template()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from troposphere import Template, Parameter, iam, Join, Ref, Output, GetAtt
+from troposphere import Template, Parameter, iam, Join, Ref, Output
 from awacs.aws import Action, Allow, Policy, Principal, Statement
 
 t = Template()
