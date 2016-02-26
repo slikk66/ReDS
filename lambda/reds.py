@@ -190,6 +190,7 @@ class reds:
                     self.info("Not enough time has passed since last modification ({})".format(
                         cooldown))
                     return False
+                break
         return True
 
     def scale(self, reason, to_index=None):
