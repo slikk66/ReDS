@@ -157,21 +157,24 @@ class reds:
 
         self.info("Checking alarm statuses")
 
-        if self.alarm_status['MetricAlarms'][0]['StateValue'] == 'ALARM':
-            self.info("High-CPU Alarm status is: ALARM")
-            self.info("Attempting scale up one size!")
-            return self.scale('scale_up', int(self.on_index+1))
-        elif self.alarm_status['MetricAlarms'][1]['StateValue'] == 'ALARM':
-            self.info("Low-CPU Alarm status is: ALARM")
-            self.info("Attempting scale down one size!")
-            return self.scale('scale_down', int(self.on_index-1))
-        elif self.details['DBInstanceClass'].startswith('db') and \
+        if self.details['DBInstanceClass'].startswith('db.t') and \
                 self.alarm_status['MetricAlarms'][2]['StateValue'] == 'ALARM':
             self.info("CPU-Credit-Low Alarm status is: ALARM")
             self.info("Attempting scale up to next non (T) instance")
             for dbtype in self.vars['instance_sizes'][int(self.on_index+1):]:
                 if not dbtype.startswith('db.t'):
                     return self.scale('credits', self.vars['instance_sizes'].index(dbtype))
+            self.info("No non-T instance found above current size!")
+
+        if self.alarm_status['MetricAlarms'][0]['StateValue'] == 'ALARM':
+            self.info("High-CPU Alarm status is: ALARM")
+            self.info("Attempting scale up one size!")
+            return self.scale('scale_up', int(self.on_index+1))
+
+        if self.alarm_status['MetricAlarms'][1]['StateValue'] == 'ALARM':
+            self.info("Low-CPU Alarm status is: ALARM")
+            self.info("Attempting scale down one size!")
+            return self.scale('scale_down', int(self.on_index-1))
 
         return self.abort("Nothing to do")
 
