@@ -33,6 +33,11 @@ medium_multi_az_available = {
         "DBInstanceStatus": "available",
         "DBInstanceClass": "db.m3.medium",
     }
+m4xl_multi_az_available = {
+        "MultiAZ": True,
+        "DBInstanceStatus": "available",
+        "DBInstanceClass": "db.m4.xlarge",
+    }
 #alarm_status
 high_cpu = {
     "MetricAlarms": [{
@@ -150,6 +155,38 @@ def test_increase_on_high_alarm():
         micro_multi_az_available, high_cpu, friday_midday_update)
     assert(a.result['Action']   ==  'RESIZE')
     assert(a.result['Message']  ==  'db.t2.small')
+
+@freeze_time("2016-01-02 19:30:00", tz_offset=0)
+def test_decrease_on_low_alarm():
+    test_yaml = get_vars()
+    a.testing_startup(test_yaml[0], test_yaml[1],
+        medium_multi_az_available, low_cpu, friday_midday_update)
+    assert(a.result['Action']   ==  'RESIZE')
+    assert(a.result['Message']  ==  'db.t2.small')
+
+@freeze_time("2016-01-02 19:30:00", tz_offset=0)
+def test_noop_on_low_alarm_at_bottom():
+    test_yaml = get_vars()
+    a.testing_startup(test_yaml[0], test_yaml[1],
+        micro_multi_az_available, low_cpu, friday_midday_update)
+    assert(a.result['Action']   ==  'NO_ACTION')
+    assert(a.result['Message']  ==  'Unable to scale - invalid to_index: -1')
+
+@freeze_time("2016-01-02 19:30:00", tz_offset=0)
+def test_noop_on_high_alarm_at_top():
+    test_yaml = get_vars()
+    a.testing_startup(test_yaml[0], test_yaml[1],
+        m4xl_multi_az_available, high_cpu, friday_midday_update)
+    assert(a.result['Action']   ==  'NO_ACTION')
+    assert(a.result['Message']  ==  'Unable to scale - invalid to_index: 5')
+
+@freeze_time("2016-01-02 19:30:00", tz_offset=0)
+def test_credits_processed_before_low_and_multiple_index_up_jump():
+    test_yaml = get_vars()
+    a.testing_startup(test_yaml[0], test_yaml[1],
+        micro_multi_az_available, high_cpu_credits_low, friday_midday_update)
+    assert(a.result['Action']   ==  'RESIZE')
+    assert(a.result['Message']  ==  'db.m3.medium')
 
 @freeze_time("2016-01-01 19:30:00", tz_offset=0)
 def test_in_scheduled_scale_out_micro_to_medium_no_alarm():
