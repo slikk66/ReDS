@@ -32,7 +32,7 @@ Instructions:
   - set "cron" vars in UTC time to represent default start/stop
   - default cron vars are 9a-5p M-F Pacific (or close to it)
   - set "scheduled_index" to be the index of instance size in "instance_sizes" (starting from 0) that you want to scale up to during those hours
-- After loading a profile from AWS CLI that has admin access, run from root:
+- After loading a profile from AWS CLI that has admin access, run from root folder:
     **make prod** to install
 - This will create all the stacks, buckets, lambda, cloudwatch, IAM roles etc needed for this project
 
