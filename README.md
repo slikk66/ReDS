@@ -41,3 +41,24 @@ Instructions:
 
 This runs approxmiately 300,000 sec/month of lambda, well below the free tier for 128MB functions (3.2M) so it's free
 
+Logs:
+Sample log output:
+
+```
+START RequestId: 15e84aae-dc44-11e5-a5b6-b58f401b95b3 Version: $LATEST
+INFO: Startup Time: 2016-02-26 04:51:01.301149
+INFO: Configured instance sizes: ['db.t2.micro', 'db.t2.small', 'db.m3.medium', 'db.m4.large', 'db.m4.xlarge']
+INFO: RDS rds-master size/status/MultiAZ: db.t2.small/available/True
+INFO: DB pointer (0-4) is currently on 1
+INFO: Scheduling not enabled
+INFO: Checking alarm statuses
+INFO: Low-CPU Alarm status is: ALARM
+INFO: Attempting scale down one size!
+INFO: Scaling to db.t2.micro
+INFO: cooldown period (minutes) for scale_down is 60
+INFO: Last finished modification 2016-02-26 04:20:07.665000+00:00 Diff: (Min, Sec): (30, 52)
+INFO: Not enough time has passed since last modification (60)
+NO_ACTION: scale_down Cooldown threshold not reached
+END RequestId: 15e84aae-dc44-11e5-a5b6-b58f401b95b3
+REPORT RequestId: 15e84aae-dc44-11e5-a5b6-b58f401b95b3  Duration: 1766.43 ms    Billed Duration: 1800 ms Memory Size: 128 MB    Max Memory Used: 29 MB
+```
