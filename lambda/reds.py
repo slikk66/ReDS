@@ -195,7 +195,7 @@ class reds:
     def scale(self, reason, to_index=None):
         if not self.vars['enabled']:
             return self.abort("Resizing disabled")
-        if to_index and 0 <= to_index < len(self.vars['instance_sizes']):
+        if 0 <= to_index < len(self.vars['instance_sizes']):
             if self.in_scheduled_up and to_index < self.vars['scheduled_index']:
                 return self.abort("Already at bottom for size during scheduled scale up")
             self.info(
