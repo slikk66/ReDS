@@ -12,9 +12,9 @@ Features:
 - Automatically increases/decreases capacity if CPU is too high/low
 - Creates multiple CloudFormation stacks to encapsulate the pieces
 - Built to AWS best practices in terms of security and IAM roles etc.
-- Uses CloudWatch alarms (that it creates) to determine when it's time to scale
--  Configurable thresholds and cooldowns
--  Virtually no cost to operate (maybe 10 cents/month?) but can provide big savings over nights and weekends (i.e. m4.large -> t2.small in off times)
+- Uses CloudWatch alarms (that it creates) to determine when it needs to scale
+- Configurable thresholds and cooldowns
+- Virtually no cost to operate (maybe 10 cents/month?) but can provide big savings over nights and weekends (i.e. m4.large -> t2.small in off times)
 
 Requirements:
 - run **make prep** to install dependencies
