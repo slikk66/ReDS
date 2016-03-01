@@ -88,4 +88,8 @@
             RdsInstance: "{{ rds_identifier }}"
             LambdaRole: "{{ iam['stack_outputs']['LambdaRole'] }}"
     register: lambda
+
+  - name: "Add reminder to manually set the recurring "
+    debug: msg="~~~ Reminder!! - Go set the recurring lambda call manually - https://github.com/slikk66/ReDS ~~~"
+    with_sequence: start=0 end=3
 ...
