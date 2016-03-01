@@ -18,7 +18,7 @@
 
   - name: Validate the cloudformation descriptions
     local_action: >
-        shell aws cloudformation validate-template --template-body file://{{ item }} --output text
+        shell aws cloudformation validate-template --region {{ region }} --template-body file://{{ item }} --output text
     with_fileglob:
       - ./json/*.json
 
