@@ -1,4 +1,5 @@
 ---
+stack_prefix: reds
 region: us-west-2
 instance_sizes:
   - db.t2.micro

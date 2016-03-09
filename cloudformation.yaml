@@ -1,36 +1,44 @@
 ---
 - name: provision stack
-  hosts: localhost
+  hosts: all
   connection: local
+
+  vars:
+    working_dirs:
+      - json
+      - tmp
+      - lambda
+
   tasks:
 
   - name: include vars
     include_vars: vars.yaml
 
-  - name: Create the temporary json output directory
-    file: dest=json state=directory
+  - name: Create the temporary directories
+    file: dest={{ item }} state=directory
+    with_items: working_dirs
 
   - name: Generate CloudFormation templates from troposphere
     local_action: >
-      shell python {{ item }} > ./json/{{ item | basename | replace('.py', '.json') }}
+      shell python {{ item }} > {{ playbook_dir }}/json/{{ item | basename | replace('.py', '.json') }}
     with_fileglob:
-      - ./templates/*.py
+      - "{{ playbook_dir }}/templates/*.py"
 
   - name: Validate the cloudformation descriptions
     local_action: >
         shell aws cloudformation validate-template --region {{ region }} --template-body file://{{ item }} --output text
     with_fileglob:
-      - ./json/*.json
+      - "{{ playbook_dir }}/json/*.json"
 
   - name: set fact for time_token
     set_fact: time_token={{ hostvars[inventory_hostname]['ansible_date_time']['iso8601'] }}
 
   - name: Create Lambda Role
     cloudformation: >
-        stack_name="reds-role"
+        stack_name="{{ stack_prefix }}-role"
         state=present
         region="{{region}}"
-        template=./json/iam-assets.json
+        template={{ playbook_dir }}/json/iam-assets.json
     args:
         template_parameters:
             RdsInstance: "{{ rds_identifier }}"
@@ -38,18 +46,18 @@
 
   - name: Create Lambda Bucket
     cloudformation: >
-        stack_name="reds-bucket"
+        stack_name="{{ stack_prefix }}-bucket"
         state=present
         region="{{region}}"
-        template=./json/s3.json
+        template={{ playbook_dir }}/json/s3.json
     register: s3
 
   - name: Create Alarms
     cloudformation: >
-        stack_name="reds-alarms"
+        stack_name="{{ stack_prefix }}-alarms"
         state=present
         region="{{region}}"
-        template=./json/alarms.json
+        template={{ playbook_dir }}/json/alarms.json
     args:
         template_parameters:
             RdsInstance: "{{ rds_identifier }}"
@@ -62,25 +70,29 @@
     register: alarms
 
   - name: Write output of the alarm names to vars
-    copy: content="---\nalarm_high{{ ':' }} {{ alarms['stack_outputs']['UpAlarm'] }}\nalarm_low{{ ':' }} {{ alarms['stack_outputs']['DownAlarm'] }}\nalarm_credits{{ ':' }} {{ alarms['stack_outputs']['CreditLowAlarm'] }}\n..." dest="./lambda/alarms.yaml"
+    copy: content="---\nalarm_high{{ ':' }} {{ alarms['stack_outputs']['UpAlarm'] }}\nalarm_low{{ ':' }} {{ alarms['stack_outputs']['DownAlarm'] }}\nalarm_credits{{ ':' }} {{ alarms['stack_outputs']['CreditLowAlarm'] }}\n..." dest="{{ playbook_dir }}/tmp/alarms.yaml"
+
+  - name: Unzip deps
+    unarchive: src={{ playbook_dir }}/reds/deps.zip dest={{ playbook_dir }}/lambda
+
+  - name: Copy script into working folder
+    local_action: >
+      shell cp {{ playbook_dir }}/reds/reds.py {{ playbook_dir }}/lambda/reds.py
 
   - name: Create local zip
     local_action: >
-      shell cd ./lambda && zip -r ../zip/reds-{{ time_token }}.zip ./*
+      shell cd {{ playbook_dir }}/lambda && zip -r {{ playbook_dir }}/tmp/reds-{{ time_token }}.zip ./* && zip -j {{ playbook_dir }}/tmp/reds-{{ time_token }}.zip {{ playbook_dir }}/vars.yaml {{ playbook_dir }}/tmp/alarms.yaml
 
   - name: Upload python files to S3 bucket
     local_action: >
-      shell aws s3 cp ./zip/reds-{{ time_token }}.zip s3://{{ s3['stack_outputs']['BucketName'] }}
-
-  - name: Clean up after ourselves
-    file: path="./zip/reds-{{ time_token }}.zip" state=absent
+      shell aws s3 cp {{ playbook_dir }}/tmp/reds-{{ time_token }}.zip s3://{{ s3['stack_outputs']['BucketName'] }}
 
   - name: Create Lambda Function
     cloudformation: >
-        stack_name="reds-lambda"
+        stack_name="{{ stack_prefix }}-lambda"
         state=present
         region="{{region}}"
-        template=./json/lambda-function.json
+        template={{ playbook_dir }}/json/lambda-function.json
     args:
         template_parameters:
             TimeToken: "{{ time_token }}"
@@ -89,7 +101,11 @@
             LambdaRole: "{{ iam['stack_outputs']['LambdaRole'] }}"
     register: lambda
 
+  - name: Clean up after ourselves
+    file: path="{{ playbook_dir }}/{{ item }}" state=absent
+    with_items: working_dirs
+
   - name: "Add reminder to manually set the recurring "
-    debug: msg="~~~ Reminder!! - Go set the recurring lambda call manually - https://github.com/slikk66/ReDS ~~~"
+    debug: msg="~~~ Reminder!! - Go set the recurring lambda call manually - https://github.com/mediatemple/ReDS ~~~"
     with_sequence: start=0 end=3
 ...

@@ -4,7 +4,7 @@ import datetime
 import pytz
 from freezegun import freeze_time
 
-reds = imp.load_source('reds', './lambda/reds.py')
+reds = imp.load_source('reds', './reds/reds.py')
 a = reds.reds()
 
 #details
