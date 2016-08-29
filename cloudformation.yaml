@@ -31,7 +31,7 @@
       - "{{ playbook_dir }}/json/*.json"
 
   - name: set fact for time_token
-    set_fact: time_token={{ hostvars[inventory_hostname]['ansible_date_time']['iso8601'] }}
+    set_fact: time_token="{{ ansible_date_time.iso8601 }}"
 
   - name: Create Lambda Role
     cloudformation: >
